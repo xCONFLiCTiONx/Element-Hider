@@ -1,5 +1,9 @@
 # Element Hider
 
+Chrome Extension
+
+
+
 A browser tool designed to hide specific elements on a webpage.
 
 
