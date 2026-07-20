@@ -4,6 +4,18 @@ A browser tool designed to hide specific elements on a webpage.
 
 
 
+
+
+Web element removal
+
+
+
+A precision tool that allows you to target and hide unwanted UI elements (like banners or overlays) on any webpage, with persistent storage so your customizations stay in place.
+
+
+
+
+
 How to Manage Hidden Elements
 
 To view or manage the objects you have hidden, follow these steps while on the site where the elements were hidden:
