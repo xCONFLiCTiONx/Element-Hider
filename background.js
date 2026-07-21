@@ -1,4 +1,5 @@
 let lastRightClickedElement = null;
+let lastRightClickedHostname = null;
 
 chrome.runtime.onInstalled.addListener(() => {
     try {
@@ -15,6 +16,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "saveTarget") {
         lastRightClickedElement = request.path;
+        lastRightClickedHostname = request.hostname;
     }
 });
 
@@ -24,12 +26,14 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
         chrome.tabs.sendMessage(tab.id, { 
             action: "hideConfirmed", 
-            path: lastRightClickedElement 
+            path: lastRightClickedElement,
+            hostname: lastRightClickedHostname
         }, () => {
             if (chrome.runtime.lastError) {
                 console.warn("Message error:", chrome.runtime.lastError.message);
             } else {
                 lastRightClickedElement = null;
+                lastRightClickedHostname = null;
             }
         });
     }

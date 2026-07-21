@@ -10,9 +10,7 @@ A browser tool designed to hide specific elements on a webpage.
 
 
 
-Web element removal
-
-
+\## Web Element Removal
 
 A precision tool that allows you to target and hide unwanted UI elements (like banners or overlays) on any webpage, with persistent storage so your customizations stay in place.
 
@@ -20,27 +18,19 @@ A precision tool that allows you to target and hide unwanted UI elements (like b
 
 
 
-How to Manage Hidden Elements
+\## How to Manage Hidden Elements
 
-To view or manage the objects you have hidden, follow these steps while on the site where the elements were hidden:
-
-
-
-Open Developer Tools: Right-click anywhere on the page and select Inspect, or press F12 on your keyboard.
+To view, manage, or delete your hidden elements across all your saved sites and open tabs:
 
 
 
-Access Local Storage: Navigate to the Application tab.
+1\. \*\*Open Extension Options:\*\* Right-click the Element Hider extension icon in your toolbar and select \*\*Options\*\*, or go to your Chrome extensions page (`chrome://extensions`), find Element Hider, and click \*\*Extension options\*\*.
 
+2\. \*\*View Managed Sites:\*\* The options page will automatically display all rules grouped by domain, pulling from your saved preferences and any currently open tabs.
 
+3\. \*\*Edit or Delete:\*\* 
 
-Locate Hidden Elements: Expand the Local Storage section in the sidebar and select the current site's URL.
+&#x20;  \* Click the \*\*Delete\*\* button next to any individual selector string to remove it instantly.
 
-
-
-Edit Data: Look for the key named HiddenElements.
-
-
-
-Note: You cannot directly edit the list of elements within this view. To make changes, you must delete the entry for the HiddenElements key and re-hide the desired elements on the webpage.
+&#x20;  \* Click \*\*Clear All for Domain\*\* to completely remove all rules for a specific website.
 
