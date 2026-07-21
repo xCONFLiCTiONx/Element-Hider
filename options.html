@@ -15,6 +15,12 @@
         margin-right: auto;
       }
       h2 { font-size: 20px; margin-top: 0; margin-bottom: 20px; text-align: center; }
+      .actions-bar {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 25px;
+      }
       .domain-card {
         background-color: #2a2a2a;
         border: 1px solid #444;
@@ -56,24 +62,37 @@
         word-break: break-all;
         flex-grow: 1;
       }
-      button {
+      button, label.file-btn {
         background: #444;
         color: #fff;
         border: none;
-        padding: 6px 12px;
+        padding: 8px 16px;
         cursor: pointer;
         border-radius: 4px;
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: bold;
         white-space: nowrap;
+        display: inline-block;
+        text-align: center;
       }
-      button:hover { background: #555; }
-      .delete-btn { background: #cc3333; }
+      button:hover, label.file-btn:hover { background: #555; }
+      .primary-btn { background: #007acc; }
+      .primary-btn:hover { background: #005999; }
+      .delete-btn { background: #cc3333; padding: 6px 12px; font-size: 12px; }
       .delete-btn:hover { background: #e64d4d; }
       .no-rules { color: #888; font-style: italic; font-size: 13px; }
+      input[type="file"] { display: none; }
     </style>
   </head>
   <body>
-    <h2>Managed Hidden Elements (Open Tabs & Saved Sites)</h2>
+    <h2>Managed Hidden Elements</h2>
+    
+    <div class="actions-bar">
+      <button id="export-btn" class="primary-btn">Export Backup (JSON)</button>
+      <label for="import-file" class="file-btn primary-btn">Import Backup</label>
+      <input type="file" id="import-file" accept=".json">
+    </div>
+
     <div id="rules-container">Loading...</div>
 
     <script src="options.js"></script>
