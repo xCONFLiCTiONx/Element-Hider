@@ -13,6 +13,11 @@ chrome.runtime.onInstalled.addListener(() => {
     }
 });
 
+// Open options page directly when clicking the extension icon
+chrome.action.onClicked.addListener(() => {
+    chrome.runtime.openOptionsPage();
+});
+
 chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "saveTarget") {
         lastRightClickedElement = request.path;

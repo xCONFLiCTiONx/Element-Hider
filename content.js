@@ -1,4 +1,5 @@
 let styleTag = null;
+let observer = null;
 
 function applyHiddenStyles() {
     try {
@@ -15,7 +16,7 @@ function applyHiddenStyles() {
             // Build a single CSS rule block that forces elements to stay hidden natively
             const cssRules = paths.map(selector => `${selector} { display: none !important; }`).join('\n');
 
-            if (!styleTag) {
+            if (!styleTag || !document.head.contains(styleTag)) {
                 styleTag = document.createElement('style');
                 styleTag.id = 'element-hider-injected-styles';
                 (document.head || document.documentElement).appendChild(styleTag);
@@ -30,8 +31,24 @@ function applyHiddenStyles() {
     }
 }
 
-// Apply immediately on load
+// Setup a MutationObserver to ensure styleTag stays present and applied if the DOM resets
+function initObserver() {
+    if (observer) return;
+    observer = new MutationObserver(() => {
+        if (!styleTag || !document.head.contains(styleTag)) {
+            applyHiddenStyles();
+        }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+}
+
+// Apply immediately on load and initialize observer
 applyHiddenStyles();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initObserver);
+} else {
+    initObserver();
+}
 
 // Listen for storage changes from the options page or context menu
 chrome.storage.onChanged.addListener((changes, areaName) => {
