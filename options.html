@@ -39,6 +39,26 @@
         font-size: 16px;
         color: #4da6ff;
       }
+      .add-rule-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      select, input[type="text"] {
+        padding: 9px 12px;
+        border-radius: 4px;
+        background-color: #1e1e1e;
+        color: #fff;
+        border: 1px solid #555;
+        font-family: monospace;
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+      select:focus, input[type="text"]:focus {
+        outline: none;
+        border-color: #007acc;
+      }
       ul {
         list-style: none;
         padding: 0;
@@ -66,7 +86,7 @@
         background: #444;
         color: #fff;
         border: none;
-        padding: 8px 16px;
+        padding: 9px 16px;
         cursor: pointer;
         border-radius: 4px;
         font-size: 13px;
@@ -91,6 +111,21 @@
       <button id="export-btn" class="primary-btn">Export Backup (JSON)</button>
       <label for="import-file" class="file-btn primary-btn">Import Backup</label>
       <input type="file" id="import-file" accept=".json">
+    </div>
+
+    <!-- Manual Rule Addition Card -->
+    <div class="domain-card">
+      <div class="domain-header" style="color: #e0e0e0; margin-bottom: 15px;">
+        <span>Add Custom Rule</span>
+      </div>
+      <div class="add-rule-container">
+        <select id="domain-select" style="flex: 1; min-width: 200px;">
+          <option value="">Loading open tabs...</option>
+        </select>
+        <input type="text" id="custom-domain-input" placeholder="e.g. mail.google.com" style="display: none; flex: 1; min-width: 180px;">
+        <input type="text" id="selector-input" placeholder='Selector or CSS rule...' style="flex: 2; min-width: 250px;">
+        <button id="add-rule-btn" class="primary-btn">Add Rule</button>
+      </div>
     </div>
 
     <div id="rules-container">Loading...</div>

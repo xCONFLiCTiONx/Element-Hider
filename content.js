@@ -13,36 +13,53 @@ function applyHiddenStyles() {
                 return;
             }
 
-            // Build a single CSS rule block that forces elements to stay hidden natively
             const cssRules = paths.map(selector => `${selector} { display: none !important; }`).join('\n');
 
+            // Apply to main document
             if (!styleTag || !document.head.contains(styleTag)) {
                 styleTag = document.createElement('style');
                 styleTag.id = 'element-hider-injected-styles';
                 (document.head || document.documentElement).appendChild(styleTag);
             }
-            
             if (styleTag.textContent !== cssRules) {
                 styleTag.textContent = cssRules;
             }
+
+            // Recursively apply to all open Shadow DOM roots (fixes Pluto TV components)
+            applyStylesToShadowRoots(document.documentElement, cssRules);
         });
     } catch (e) {
         // Silent
     }
 }
 
-// Setup a MutationObserver to ensure styleTag stays present and applied if the DOM resets
+function applyStylesToShadowRoots(root, cssRules) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null, false);
+    while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node.shadowRoot) {
+            let shadowStyle = node.shadowRoot.getElementById('element-hider-shadow-styles');
+            if (!shadowStyle) {
+                shadowStyle = document.createElement('style');
+                shadowStyle.id = 'element-hider-shadow-styles';
+                node.shadowRoot.appendChild(shadowStyle);
+            }
+            if (shadowStyle.textContent !== cssRules) {
+                shadowStyle.textContent = cssRules;
+            }
+            applyStylesToShadowRoots(node.shadowRoot, cssRules);
+        }
+    }
+}
+
 function initObserver() {
     if (observer) return;
     observer = new MutationObserver(() => {
-        if (!styleTag || !document.head.contains(styleTag)) {
-            applyHiddenStyles();
-        }
+        applyHiddenStyles();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
 }
 
-// Apply immediately on load and initialize observer
 applyHiddenStyles();
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initObserver);
@@ -50,7 +67,6 @@ if (document.readyState === 'loading') {
     initObserver();
 }
 
-// Listen for storage changes from the options page or context menu
 chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local' && changes.HiddenElements) {
         applyHiddenStyles();
@@ -60,20 +76,36 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 document.addEventListener("contextmenu", (event) => {
     if (!event || !event.target) return;
     
-    const el = event.target;
+    let el = event.target;
     if (!el.tagName || el.tagName === 'HTML' || el.tagName === 'BODY') return;
     
-    let path = el.tagName.toLowerCase();
-    if (el.hasAttribute('aria-label')) {
+    let path = '';
+    if (el.id) {
+        path = `#${CSS.escape(el.id)}`;
+    } else if (el.hasAttribute('data-qa')) {
+        path = `[data-qa="${CSS.escape(el.getAttribute('data-qa'))}"]`;
+    } else if (el.hasAttribute('data-testid')) {
+        path = `[data-testid="${CSS.escape(el.getAttribute('data-testid'))}"]`;
+    } else if (el.hasAttribute('aria-label')) {
         path = `[aria-label="${CSS.escape(el.getAttribute('aria-label'))}"]`;
-    } else if (el.hasAttribute('data-test-id')) {
-        path = `[data-test-id="${CSS.escape(el.getAttribute('data-test-id'))}"]`;
-    } else if (el.id) {
-        path += '#' + CSS.escape(el.id);
-    } else if (el.classList && el.classList.length > 0) {
-        const validClasses = Array.from(el.classList).filter(c => !c.startsWith('_ngcontent'));
-        if (validClasses.length > 0) {
-            path += '.' + validClasses.map(c => CSS.escape(c)).join('.');
+    } else {
+        let tag = el.tagName.toLowerCase();
+        let classes = Array.from(el.classList || []).filter(c => 
+            !c.startsWith('_') && 
+            !c.includes('jw-') && 
+            c.length > 2
+        );
+        
+        if (classes.length > 0) {
+            path = `${tag}.${classes.map(c => CSS.escape(c)).join('.')}`;
+        } else {
+            let parent = el.parentElement;
+            if (parent) {
+                let index = Array.from(parent.children).indexOf(el) + 1;
+                path = `${parent.tagName.toLowerCase()} > ${tag}:nth-child(${index})`;
+            } else {
+                path = tag;
+            }
         }
     }
     

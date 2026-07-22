@@ -1,6 +1,3 @@
-let lastRightClickedElement = null;
-let lastRightClickedHostname = null;
-
 chrome.runtime.onInstalled.addListener(() => {
     try {
         chrome.contextMenus.create({
@@ -20,26 +17,35 @@ chrome.action.onClicked.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request) => {
     if (request.action === "saveTarget") {
-        lastRightClickedElement = request.path;
-        lastRightClickedHostname = request.hostname;
+        // Store target path and hostname persistently so the service worker doesn't lose it if it sleeps
+        chrome.storage.local.set({
+            tempTarget: request.path,
+            tempHostname: request.hostname
+        });
     }
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "hideElement" && lastRightClickedElement) {
+    if (info.menuItemId === "hideElement") {
         if (!tab || !tab.id) return;
 
-        chrome.tabs.sendMessage(tab.id, { 
-            action: "hideConfirmed", 
-            path: lastRightClickedElement,
-            hostname: lastRightClickedHostname
-        }, () => {
-            if (chrome.runtime.lastError) {
-                console.warn("Message error:", chrome.runtime.lastError.message);
-            } else {
-                lastRightClickedElement = null;
-                lastRightClickedHostname = null;
-            }
+        chrome.storage.local.get(['tempTarget', 'tempHostname'], (data) => {
+            const targetPath = data.tempTarget;
+            const targetHostname = data.tempHostname;
+
+            if (!targetPath) return;
+
+            chrome.tabs.sendMessage(tab.id, { 
+                action: "hideConfirmed", 
+                path: targetPath,
+                hostname: targetHostname
+            }, () => {
+                if (chrome.runtime.lastError) {
+                    console.warn("Message error:", chrome.runtime.lastError.message);
+                } else {
+                    chrome.storage.local.remove(['tempTarget', 'tempHostname']);
+                }
+            });
         });
     }
 });
