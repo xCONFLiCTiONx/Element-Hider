@@ -4,9 +4,9 @@
     <title>Element Hider Options</title>
     <style>
       body {
-        font-family: sans-serif;
-        background-color: #1e1e1e;
-        color: #e0e0e0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        background-color: #0d1117;
+        color: #c9d1d9;
         padding: 30px;
         margin: 0;
         min-width: 650px;
@@ -14,7 +14,7 @@
         margin-left: auto;
         margin-right: auto;
       }
-      h2 { font-size: 20px; margin-top: 0; margin-bottom: 20px; text-align: center; }
+      h2 { font-size: 20px; margin-top: 0; margin-bottom: 20px; text-align: center; color: #58a6ff; font-weight: 600; }
       .actions-bar {
         display: flex;
         justify-content: center;
@@ -22,12 +22,12 @@
         margin-bottom: 25px;
       }
       .domain-card {
-        background-color: #2a2a2a;
-        border: 1px solid #444;
+        background-color: #161b22;
+        border: 1px solid #30363d;
         border-radius: 8px;
         padding: 16px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       }
       .domain-header {
         display: flex;
@@ -36,28 +36,45 @@
         margin-bottom: 12px;
         font-weight: bold;
         font-family: monospace;
-        font-size: 16px;
-        color: #4da6ff;
+        font-size: 15px;
+        color: #79c0ff;
       }
       .add-rule-container {
         display: flex;
+        flex-direction: column;
         gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
+      }
+      .top-row {
+        display: flex;
+        gap: 10px;
       }
       select, input[type="text"] {
         padding: 9px 12px;
-        border-radius: 4px;
-        background-color: #1e1e1e;
-        color: #fff;
-        border: 1px solid #555;
+        border-radius: 6px;
+        background-color: #0d1117;
+        color: #f0f6fc;
+        border: 1px solid #30363d;
         font-family: monospace;
         font-size: 13px;
         box-sizing: border-box;
       }
-      select:focus, input[type="text"]:focus {
+      select:focus, input[type="text"]:focus, textarea:focus {
         outline: none;
-        border-color: #007acc;
+        border-color: #1f6feb;
+        box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
+      }
+      textarea {
+        width: 100%;
+        height: 110px;
+        padding: 10px;
+        background-color: #040d21;
+        color: #a5d6ff;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 13px;
+        box-sizing: border-box;
+        resize: vertical;
       }
       ul {
         list-style: none;
@@ -70,10 +87,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: #1e1e1e;
+        background-color: #0d1117;
         padding: 10px 12px;
         margin-bottom: 8px;
         border-radius: 6px;
+        border: 1px solid #21262d;
         font-family: monospace;
         font-size: 13px;
         gap: 15px;
@@ -81,26 +99,30 @@
       li span {
         word-break: break-all;
         flex-grow: 1;
+        white-space: pre-wrap;
+        color: #a5d6ff;
       }
       button, label.file-btn {
-        background: #444;
-        color: #fff;
-        border: none;
-        padding: 9px 16px;
+        background: #21262d;
+        color: #c9d1d9;
+        border: 1px solid rgba(240,246,252,0.1);
+        padding: 8px 14px;
         cursor: pointer;
-        border-radius: 4px;
+        border-radius: 6px;
         font-size: 13px;
-        font-weight: bold;
+        font-weight: 600;
         white-space: nowrap;
         display: inline-block;
         text-align: center;
       }
-      button:hover, label.file-btn:hover { background: #555; }
-      .primary-btn { background: #007acc; }
-      .primary-btn:hover { background: #005999; }
-      .delete-btn { background: #cc3333; padding: 6px 12px; font-size: 12px; }
-      .delete-btn:hover { background: #e64d4d; }
-      .no-rules { color: #888; font-style: italic; font-size: 13px; }
+      button:hover, label.file-btn:hover { background: #30363d; border-color: #8b949e; }
+      .primary-btn { background: #238636; color: #fff; border-color: rgba(240,246,252,0.1); }
+      .primary-btn:hover { background: #2ea043; }
+      .delete-btn { background: #da3633; color: #fff; padding: 6px 12px; font-size: 12px; border: none; }
+      .delete-btn:hover { background: #f85149; }
+      .edit-btn { background: #1f6feb; color: #fff; padding: 6px 12px; font-size: 12px; border: none; }
+      .edit-btn:hover { background: #388bfd; }
+      .no-rules { color: #8b949e; font-style: italic; font-size: 13px; }
       input[type="file"] { display: none; }
     </style>
   </head>
@@ -113,18 +135,22 @@
       <input type="file" id="import-file" accept=".json">
     </div>
 
-    <!-- Manual Rule Addition Card -->
+    <!-- Code Editor Box Card -->
     <div class="domain-card">
-      <div class="domain-header" style="color: #e0e0e0; margin-bottom: 15px;">
-        <span>Add Custom Rule</span>
+      <div class="domain-header">
+        <span id="editor-mode-label">CSS Code Editor</span>
       </div>
       <div class="add-rule-container">
-        <select id="domain-select" style="flex: 1; min-width: 200px;">
-          <option value="">Loading open tabs...</option>
-        </select>
-        <input type="text" id="custom-domain-input" placeholder="e.g. mail.google.com" style="display: none; flex: 1; min-width: 180px;">
-        <input type="text" id="selector-input" placeholder='Selector or CSS rule...' style="flex: 2; min-width: 250px;">
-        <button id="add-rule-btn" class="primary-btn">Add Rule</button>
+        <div class="top-row">
+          <select id="domain-select" style="flex: 1; min-width: 200px;">
+            <option value="">Loading open tabs...</option>
+          </select>
+          <input type="text" id="custom-domain-input" placeholder="e.g. mail.google.com" style="display: none; flex: 1; min-width: 180px;">
+          <button id="save-rule-btn" class="primary-btn">Save to List</button>
+          <button id="cancel-edit-btn" style="display:none; background:#30363d;">Cancel</button>
+        </div>
+        <!-- Code Editor Box -->
+        <textarea id="selector-input" placeholder=".element &#10;{&#10;    display: none !important;&#10;}"></textarea>
       </div>
     </div>
 

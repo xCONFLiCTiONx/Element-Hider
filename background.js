@@ -10,42 +10,29 @@ chrome.runtime.onInstalled.addListener(() => {
     }
 });
 
-// Open options page directly when clicking the extension icon
 chrome.action.onClicked.addListener(() => {
     chrome.runtime.openOptionsPage();
 });
 
-chrome.runtime.onMessage.addListener((request) => {
-    if (request.action === "saveTarget") {
-        // Store target path and hostname persistently so the service worker doesn't lose it if it sleeps
-        chrome.storage.local.set({
-            tempTarget: request.path,
-            tempHostname: request.hostname
-        });
+// When context menu is clicked, safely send message to content script
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === "hideElement") {
+        if (tab && tab.id) {
+            // Check if URL is valid for content scripts (skip chrome:// or edge:// pages)
+            if (tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://"))) {
+                chrome.tabs.sendMessage(tab.id, { action: "hideElementClicked" }, () => {
+                    // Catch and suppress errors if connection fails
+                    if (chrome.runtime.lastError) {
+                        // Content script not yet injected or unavailable on this page
+                    }
+                });
+            }
+        }
     }
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "hideElement") {
-        if (!tab || !tab.id) return;
-
-        chrome.storage.local.get(['tempTarget', 'tempHostname'], (data) => {
-            const targetPath = data.tempTarget;
-            const targetHostname = data.tempHostname;
-
-            if (!targetPath) return;
-
-            chrome.tabs.sendMessage(tab.id, { 
-                action: "hideConfirmed", 
-                path: targetPath,
-                hostname: targetHostname
-            }, () => {
-                if (chrome.runtime.lastError) {
-                    console.warn("Message error:", chrome.runtime.lastError.message);
-                } else {
-                    chrome.storage.local.remove(['tempTarget', 'tempHostname']);
-                }
-            });
-        });
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "openOptions") {
+        chrome.runtime.openOptionsPage();
     }
 });

@@ -4,14 +4,17 @@ const importFile = document.getElementById('import-file');
 const domainSelect = document.getElementById('domain-select');
 const customDomainInput = document.getElementById('custom-domain-input');
 const selectorInput = document.getElementById('selector-input');
-const addRuleBtn = document.getElementById('add-rule-btn');
+const saveRuleBtn = document.getElementById('save-rule-btn');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+const editorModeLabel = document.getElementById('editor-mode-label');
 
-// Populate dropdown with hostnames from currently open tabs and saved domains
+let editingIndex = null;
+let editingDomain = null;
+
 function populateDomainDropdown() {
     chrome.tabs.query({}, (tabs) => {
         const domains = new Set();
         
-        // Grab domains from all open HTTP/HTTPS tabs
         tabs.forEach(tab => {
             if (tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'))) {
                 try {
@@ -21,7 +24,6 @@ function populateDomainDropdown() {
             }
         });
 
-        // Also include existing domains already saved in local storage
         chrome.storage.local.get(['HiddenElements'], (result) => {
             const siteRules = result.HiddenElements || {};
             Object.keys(siteRules).forEach(d => domains.add(d));
@@ -53,7 +55,6 @@ function populateDomainDropdown() {
     });
 }
 
-// Show text input if user selects "Type Custom Domain"
 domainSelect.addEventListener('change', () => {
     if (domainSelect.value === '__custom__') {
         customDomainInput.style.display = 'inline-block';
@@ -63,52 +64,57 @@ domainSelect.addEventListener('change', () => {
     }
 });
 
-// Cleans up raw inputs so pasting full CSS blocks or single selectors works seamlessly
-function cleanSelector(raw) {
-    let cleaned = raw.trim();
-    if (cleaned.includes('{')) {
-        cleaned = cleaned.split('{')[0].trim();
-    }
-    return cleaned;
+function resetEditorState(clearText = true) {
+    editingIndex = null;
+    editingDomain = null;
+    editorModeLabel.textContent = "CSS Code Editor";
+    saveRuleBtn.textContent = "Save to List";
+    cancelEditBtn.style.display = "none";
+    if (clearText) selectorInput.value = '';
 }
 
-// Add rule button handler
-addRuleBtn.addEventListener('click', () => {
+cancelEditBtn.addEventListener('click', () => {
+    resetEditorState();
+});
+
+saveRuleBtn.addEventListener('click', () => {
     let targetDomain = domainSelect.value;
     if (targetDomain === '__custom__') {
         targetDomain = customDomainInput.value.trim().toLowerCase();
     }
 
-    const rawInput = selectorInput.value;
-    const cleanedSelector = cleanSelector(rawInput);
+    const cssRule = selectorInput.value.trim();
 
     if (!targetDomain) {
         alert('Please select or enter a valid domain.');
         return;
     }
 
-    if (!cleanedSelector) {
-        alert('Please enter a selector.');
+    if (!cssRule) {
+        alert('Please enter CSS code in the editor box.');
         return;
     }
 
     chrome.storage.local.get(['HiddenElements'], (result) => {
         const siteRules = result.HiddenElements || {};
 
+        if (editingDomain && editingIndex !== null) {
+            if (siteRules[editingDomain]) {
+                siteRules[editingDomain].splice(editingIndex, 1);
+                if (siteRules[editingDomain].length === 0) {
+                    delete siteRules[editingDomain];
+                }
+            }
+        }
+
         if (!siteRules[targetDomain]) {
             siteRules[targetDomain] = [];
         }
 
-        // Appends to the existing domain array without deleting old elements
-        if (!siteRules[targetDomain].includes(cleanedSelector)) {
-            siteRules[targetDomain].push(cleanedSelector);
-        }
+        siteRules[targetDomain].push(cssRule);
 
         chrome.storage.local.set({ HiddenElements: siteRules }, () => {
-            selectorInput.value = '';
-            if (domainSelect.value === '__custom__') {
-                customDomainInput.value = '';
-            }
+            resetEditorState();
             renderRules();
             populateDomainDropdown();
         });
@@ -127,7 +133,7 @@ function renderRules() {
         }
 
         savedDomains.forEach(domain => {
-            const paths = allRules[domain] || [];
+            const rules = allRules[domain] || [];
 
             const card = document.createElement('div');
             card.className = 'domain-card';
@@ -136,11 +142,12 @@ function renderRules() {
             header.className = 'domain-header';
             header.innerHTML = `<span>${domain}</span>`;
 
-            if (paths.length > 0) {
+            if (rules.length > 0) {
                 const clearBtn = document.createElement('button');
                 clearBtn.className = 'delete-btn';
                 clearBtn.textContent = 'Clear All for Domain';
                 clearBtn.onclick = () => {
+                    if (editingDomain === domain) resetEditorState();
                     delete allRules[domain];
                     saveAndRefresh(allRules);
                 };
@@ -148,29 +155,51 @@ function renderRules() {
             }
             card.appendChild(header);
 
-            if (paths.length === 0) {
+            if (rules.length === 0) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.className = 'no-rules';
-                emptyMsg.textContent = 'No hidden elements for this site.';
+                emptyMsg.textContent = 'No rules for this site.';
                 card.appendChild(emptyMsg);
             } else {
                 const ul = document.createElement('ul');
-                paths.forEach((path, index) => {
+                rules.forEach((rule, index) => {
                     const li = document.createElement('li');
                     
                     const textSpan = document.createElement('span');
-                    textSpan.textContent = path;
+                    textSpan.textContent = rule;
                     li.appendChild(textSpan);
+
+                    const editItemBtn = document.createElement('button');
+                    editItemBtn.className = 'edit-btn';
+                    editItemBtn.textContent = 'Edit in Code Box';
+                    editItemBtn.onclick = () => {
+                        domainSelect.value = domain;
+                        customDomainInput.style.display = 'none';
+                        selectorInput.value = rule;
+                        
+                        editingIndex = index;
+                        editingDomain = domain;
+                        editorModeLabel.textContent = `Editing Rule for: ${domain}`;
+                        saveRuleBtn.textContent = "Update Rule";
+                        cancelEditBtn.style.display = "inline-block";
+
+                        selectorInput.focus();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    };
+                    li.appendChild(editItemBtn);
 
                     const deleteItemBtn = document.createElement('button');
                     deleteItemBtn.className = 'delete-btn';
                     deleteItemBtn.textContent = 'Delete';
                     deleteItemBtn.onclick = () => {
-                        paths.splice(index, 1);
-                        if (paths.length === 0) {
+                        if (editingDomain === domain && editingIndex === index) {
+                            resetEditorState();
+                        }
+                        rules.splice(index, 1);
+                        if (rules.length === 0) {
                             delete allRules[domain];
                         } else {
-                            allRules[domain] = paths;
+                            allRules[domain] = rules;
                         }
                         saveAndRefresh(allRules);
                     };
@@ -192,7 +221,14 @@ function saveAndRefresh(newRules) {
     });
 }
 
-// Export stored rules to a JSON file
+// Automatically refresh list and dropdown if storage changes externally (e.g. from another tab)
+chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.HiddenElements) {
+        renderRules();
+        populateDomainDropdown();
+    }
+});
+
 exportBtn.addEventListener('click', () => {
     chrome.storage.local.get(['HiddenElements'], (result) => {
         const allRules = result.HiddenElements || {};
@@ -206,7 +242,6 @@ exportBtn.addEventListener('click', () => {
     });
 });
 
-// Import rules from a JSON backup file
 importFile.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -232,6 +267,5 @@ importFile.addEventListener('change', (event) => {
     reader.readAsText(file);
 });
 
-// Initial load
 renderRules();
 populateDomainDropdown();
