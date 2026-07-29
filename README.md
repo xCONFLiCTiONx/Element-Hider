@@ -3,10 +3,10 @@ Chrome Extension
 
 A browser tool designed to hide specific elements on a webpage.
 
+> **New:** You can now edit styles using pure CSS and default action is still hiding. But you can go into the options and change any element you like on a page.
 
 ## Web Element Removal
 A precision tool that allows you to target and hide unwanted UI elements (like banners or overlays) on any webpage, with persistent storage so your customizations stay in place.
-
 
 ## How to Manage Hidden Elements
 To view, manage, or delete your hidden elements across all your saved sites and open tabs:
@@ -16,7 +16,6 @@ To view, manage, or delete your hidden elements across all your saved sites and 
 3. **Edit or Delete:** 
     * Click the **Delete** button next to any individual selector string to remove it instantly.
     * Click **Clear All for Domain** to completely remove all rules for a specific website.
-
 
 ## CSS Selector Cheat Sheet for Element Hider
 
