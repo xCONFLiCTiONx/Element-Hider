@@ -1,40 +1,40 @@
 # Element Hider
-Chrome Extension
 
-A browser tool designed to hide specific elements on a webpage.
+A precision browser tool designed to target and hide unwanted UI elements on any webpage with persistent storage.
 
-> **New:** You can now edit styles using pure CSS and default action is still hiding. But you can go into the options and change any element you like on a page.
+## 🚀 Overview
 
-## Web Element Removal
-A precision tool that allows you to target and hide unwanted UI elements (like banners or overlays) on any webpage, with persistent storage so your customizations stay in place.
+Customizing your web experience has never been easier. **Element Hider** allows you to permanently remove banners, overlays, and distracting elements using simple right-click actions or advanced CSS selectors.
 
-## How to Manage Hidden Elements
-To view, manage, or delete your hidden elements across all your saved sites and open tabs:
+## ✨ Key Features
 
-1. **Open Extension Options:** Right-click the Element Hider extension icon in your toolbar and select **Options**, or go to your Chrome extensions page (`chrome://extensions`), find Element Hider, and click **Extension options**.
-2. **View Managed Sites:** The options page will automatically display all rules grouped by domain, pulling from your saved preferences and any currently open tabs.
-3. **Edit or Delete:** 
-    * Click the **Delete** button next to any individual selector string to remove it instantly.
-    * Click **Clear All for Domain** to completely remove all rules for a specific website.
+- **Precision Removal**: Target specific elements and hide them instantly.
+- **Persistent Storage**: Your customizations are saved per domain and persist across browser sessions.
+- **Advanced CSS Support**: Edit styles or hide elements using raw CSS selectors for maximum flexibility.
+- **Domain-Based Management**: Easily view and clear all rules for a specific website.
+- **Intelligent Selectors**: Supports attribute, class, and parent-child (`:has()`) selectors.
+- **Right-Click Integration**: Quickly hide elements via the context menu.
 
-## CSS Selector Cheat Sheet for Element Hider
+## 🛠️ Installation
 
-### 1. Attribute Selectors (Most Reliable)
-Target elements using developer test IDs or specific attributes. These rarely change.
-* **Format:** `[attribute="value"]`
-* **Example:** `[data-test-id="label"]` targets any element with that exact test ID.
-* **Example:** `[aria-label="Settings"]` targets elements by their accessibility label.
+1. Clone or download the extension folder.
+2. Go to `chrome://extensions/` in Chrome.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the extension directory.
 
-### 2. Class Selectors
-Target elements using their class names. Use specific classes to avoid accidentally hiding other elements.
-* **Format:** `.class-name`
-* **Example:** `.mat-mdc-snack-bar-label` targets the specific snackbar text class.
+## 📖 Managing Hidden Elements
 
-### 3. Combining Selectors (Parent to Child)
-Target a specific wrapper or container *only when* it holds a unique child element.
-* **Format:** `parent-selector:has(child-selector)`
-* **Example:** `div.container:has([data-test-id="label"])` hides the outer container only if it contains that specific error label.
+1. **Options Page**: Right-click the icon and select **Options** to view all managed sites.
+2. **Edit/Delete**: 
+   - Remove individual selectors with a single click.
+   - Use **Clear All for Domain** to reset a site's layout.
+3. **Advanced Tweaks**: Modify existing rules to change more than just visibility (e.g., opacity, colors).
 
-### 4. What to Avoid
-* **Dynamic Angular Attributes (`_ngcontent-...`):** Avoid these entirely because the random numbers and letters change every time the page or application reloads.
-* **Overly Generic Classes:** Avoid using generic class names like `.container` or `.wrapper` by themselves, as they will hide multiple unrelated elements across the page.
+## 💡 Selector Tips
+
+- **Best Results**: Use Attribute Selectors like `[data-test-id="label"]` for stability.
+- **Angular Apps**: Avoid dynamic Angular attributes (e.g., `_ngcontent-v-123`) as they change on reload.
+- **Contextual Hiding**: Use `:has()` to hide containers only when they contain specific child elements.
+
+---
+*Clean up the web, one element at a time.*
