@@ -267,5 +267,20 @@ importFile.addEventListener('change', (event) => {
     reader.readAsText(file);
 });
 
+// Enable Tab key indentation in the CSS editor box
+selectorInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+
+        // Insert 4 spaces at the cursor position
+        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+
+        // Move the cursor to after the inserted spaces
+        this.selectionStart = this.selectionEnd = start + 4;
+    }
+});
+
 renderRules();
 populateDomainDropdown();
