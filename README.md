@@ -1,3 +1,5 @@
+<img src="icons/icon128.png" alt="Weather Watcher Logo" width="64" align="left" style="margin-right: 20px; border-radius: 10px;">
+
 # Element Hider
 
 A precision browser tool designed to target and hide unwanted UI elements on any webpage with persistent storage.
