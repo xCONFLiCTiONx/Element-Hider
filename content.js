@@ -110,7 +110,7 @@ document.addEventListener("contextmenu", (event) => {
     lastRightClickedElement = `${path} {\n    display: none !important;\n}`;
 });
 
-function showNotificationPopup() {
+function showNotificationPopup(ruleToUndo) {
     const existing = document.getElementById('element-hider-notification');
     if (existing) existing.remove();
 
@@ -118,8 +118,9 @@ function showNotificationPopup() {
     banner.id = 'element-hider-notification';
     banner.innerHTML = `
         <span style="font-family: monospace; font-size: 13px;">Element hidden!</span>
-        <button id="eh-options-btn" style="background: #007acc; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">View Options Page</button>
-        <button id="eh-close-btn" style="background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 14px; padding: 0 4px;">&times;</button>
+        <button id="eh-undo-btn" style="background: #e5a400; color: #111; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.2s;">Undo</button>
+        <button id="eh-options-btn" style="background: #007acc; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.2s;">View Options Page</button>
+        <button id="eh-close-btn" style="background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1;">&times;</button>
     `;
     
     banner.style.cssText = `
@@ -173,10 +174,45 @@ function showNotificationPopup() {
         }
     });
 
-    document.getElementById('eh-options-btn').addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: "openOptions" });
-        banner.remove();
-    });
+    const undoBtn = document.getElementById('eh-undo-btn');
+    if (undoBtn && ruleToUndo) {
+        undoBtn.addEventListener('mouseenter', () => undoBtn.style.background = '#ffc107');
+        undoBtn.addEventListener('mouseleave', () => undoBtn.style.background = '#e5a400');
+        undoBtn.addEventListener('click', () => {
+            const hostname = window.location.hostname;
+            chrome.storage.local.get(['HiddenElements'], (result) => {
+                const siteRules = result.HiddenElements || {};
+                if (siteRules[hostname]) {
+                    const idx = siteRules[hostname].indexOf(ruleToUndo);
+                    if (idx !== -1) {
+                        siteRules[hostname].splice(idx, 1);
+                        if (siteRules[hostname].length === 0) {
+                            delete siteRules[hostname];
+                        }
+                        chrome.storage.local.set({ HiddenElements: siteRules }, () => {
+                            const statusSpan = banner.querySelector('span');
+                            if (statusSpan) statusSpan.textContent = 'Element restored!';
+                            undoBtn.style.display = 'none';
+                            setTimeout(() => {
+                                banner.style.opacity = '0';
+                                setTimeout(() => banner.remove(), 500);
+                            }, 1200);
+                        });
+                    }
+                }
+            });
+        });
+    }
+
+    const optionsBtn = document.getElementById('eh-options-btn');
+    if (optionsBtn) {
+        optionsBtn.addEventListener('mouseenter', () => optionsBtn.style.background = '#1a8cff');
+        optionsBtn.addEventListener('mouseleave', () => optionsBtn.style.background = '#007acc');
+        optionsBtn.addEventListener('click', () => {
+            chrome.runtime.sendMessage({ action: "openOptions" });
+            banner.remove();
+        });
+    }
 
     document.getElementById('eh-close-btn').addEventListener('click', () => {
         banner.style.opacity = '0';
@@ -188,17 +224,18 @@ function showNotificationPopup() {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "hideElementClicked" && lastRightClickedElement) {
+        const ruleToAdd = lastRightClickedElement;
         const hostname = window.location.hostname;
         chrome.storage.local.get(['HiddenElements'], (result) => {
             const siteRules = result.HiddenElements || {};
             if (!siteRules[hostname]) {
                 siteRules[hostname] = [];
             }
-            if (!siteRules[hostname].includes(lastRightClickedElement)) {
-                siteRules[hostname].push(lastRightClickedElement);
+            if (!siteRules[hostname].includes(ruleToAdd)) {
+                siteRules[hostname].push(ruleToAdd);
             }
             chrome.storage.local.set({ HiddenElements: siteRules }, () => {
-                showNotificationPopup();
+                showNotificationPopup(ruleToAdd);
                 sendResponse({ status: "success" });
             });
         });
